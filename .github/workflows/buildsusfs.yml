@@ -1,4 +1,4 @@
-name: Mojito - NetErnels-KernelSU-susfs
+name: Mojito - strix-KSUNext-susfs
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
 env:
   ARCH: arm64
   SUBARCH: arm64
-  DEFCONFIG: neternels_defconfig
+  DEFCONFIG: mojito_defconfig
   CROSS_COMPILE: aarch64-linux-gnu-
   CROSS_COMPILE_ARM32: arm-linux-gnueabi-
   CROSS_COMPILE_COMPAT: arm-linux-gnueabi-
@@ -94,7 +94,7 @@ jobs:
           
 
           ./scripts/config --file out/.config \
-            --set-str LOCALVERSION "-NetErnels"
+            --set-str LOCALVERSION "-Strix"
 
           # Evite le build cassé du compat vDSO avec LLVM
           ./scripts/config --file out/.config --disable CONFIG_COMPAT_VDSO
@@ -132,6 +132,6 @@ jobs:
       - name: Envoyer l’artefact
         uses: actions/upload-artifact@v4
         with:
-          name: Mojito-NetErnels-KernelSU
+          name: Mojito-strix-KernelSU
           path: release/
           if-no-files-found: error
