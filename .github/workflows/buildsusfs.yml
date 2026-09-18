@@ -53,8 +53,12 @@ jobs:
           git clone --depth=1 -b legacy https://github.com/KernelSU-Next/KernelSU-Next.git KernelSU
           ln -s ../KernelSU/kernel drivers/kernelsu
           sed -i 's/get_monotonic_boottime(&ts)/ktime_get_boottime_ts64(\&ts)/' KernelSU/kernel/sulog/event.c
-        
-          # 2. Patch spécifique à KernelSU
+
+          # Remplace sepolicy.c (version flex_array Samsung, incompatible avec Mojito)
+          # par la version upstream compatible policydb standard
+          curl -fsSL https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/selinux/sepolicy.c \
+            -o KernelSU/kernel/selinux/sepolicy.c
+
           cp susfs/kernel_patches/KernelSU/susfs_hook_only_official-legacy.patch KernelSU/
           cd KernelSU
           patch -p1 < susfs_hook_only_official-legacy.patch || true
