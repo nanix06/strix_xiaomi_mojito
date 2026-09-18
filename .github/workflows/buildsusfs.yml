@@ -93,6 +93,15 @@ jobs:
           patch -p1 < susfs_patch_ksunext.patch || true
           cd ..
 
+      - name: Ajouter KProfiles
+        run: |
+          git clone --depth=1 \
+            https://github.com/beakthoven/Kprofiles.git \
+            drivers/misc/kprofiles
+
+          printf '\nsource "drivers/misc/kprofiles/Kconfig"\n' >> drivers/misc/Kconfig
+          printf '\nobj-$(CONFIG_KPROFILES) += kprofiles/\n' >> drivers/misc/Makefile  
+
       - name: Configurer le noyau
         run: |
           export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
@@ -128,6 +137,7 @@ jobs:
 
           ./scripts/config --file out/.config \
             --set-str LOCALVERSION "-Strix"
+          ./scripts/config --file out/.config --disable CONFIG_LOCALVERSION_AUTO
 
           # Evite le build cassé du compat vDSO avec LLVM
           ./scripts/config --file out/.config --disable CONFIG_COMPAT_VDSO
