@@ -56,6 +56,33 @@ jobs:
 
           bash susfs/kernel_patches/fix_sepolicy_mojito.sh KernelSU
 
+          # backslashxx/KernelSU = unity build -> son sepolicy.c n'a AUCUN
+          # include. Compilé en standalone ici, il lui manque donc
+          # LINUX_VERSION_CODE/KERNEL_VERSION/bool/uint16_t, etc.
+          # KSU_TYPE_VAL_TO_STRUCT = détection auto par le Makefile
+          # backslashxx (grep de policydb.h) que le Makefile legacy de
+          # KernelSU-Next ne fait PAS -> sinon branche flex_array sur 4.14.
+          printf '%s\n' \
+            '#define KSU_TYPE_VAL_TO_STRUCT' \
+            '#include "ss/avtab.h"' \
+            '#include "ss/constraint.h"' \
+            '#include "ss/ebitmap.h"' \
+            '#include "ss/hashtab.h"' \
+            '#include "ss/policydb.h"' \
+            '#include "ss/services.h"' \
+            '#include "ss/symtab.h"' \
+            '#include <linux/gfp.h>' \
+            '#include <linux/kernel.h>' \
+            '#include <linux/printk.h>' \
+            '#include <linux/slab.h>' \
+            '#include <linux/stddef.h>' \
+            '#include <linux/string.h>' \
+            '#include <linux/types.h>' \
+            '#include <linux/version.h>' \
+            '#include <linux/vmalloc.h>' \
+            | cat - KernelSU/kernel/selinux/sepolicy.c > /tmp/sepolicy.c.net \
+            && mv /tmp/sepolicy.c.net KernelSU/kernel/selinux/sepolicy.c
+
           cp susfs/kernel_patches/KernelSU/susfs_hook_only_official-legacy.patch KernelSU/
           cd KernelSU
           patch -p1 < susfs_hook_only_official-legacy.patch || true
