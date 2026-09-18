@@ -42,7 +42,7 @@ jobs:
           patch -p1 --fuzz=3 < patches/Patches/SU_kernel/patch_ksunext.patch || true
           patch -p1 --fuzz=3 < patches/Patches/SuSFS_Kernel/50_add_susfs_in_kernel-4.14.patch || true
           patch -p1 --fuzz=3 < patches/Patches/Fix/susfs_fix_nameic.patch || true
-          patch -p1 --fuzz=3 < patches/Patches/Fix/susf_fix_statc.patch || true
+          patch -p1 --fuzz=3 < patches/Patches/Fix/susfs_fix_statc.patch || true
           patch -p1 --fuzz=3 < patches/Patches/SuSFS_Kernel/55_try_umount_for_susfs.patch || true
           sed -i 's/inotify_mark_user_mask(mark)/(mark->mask \& IN_ALL_EVENTS)/g' fs/notify/fdinfo.c
           sed -i '/^orig_flow:$/a\\t\t;' fs/notify/fdinfo.c
