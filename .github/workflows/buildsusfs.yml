@@ -38,12 +38,12 @@ jobs:
  
       - name: Télécharger et appliquer les patchs KernelSU et SuSFS
         run: |
-          git clone --depth=1 -b kernel-4.14 https://github.com/nanix06/susfs4ksu.git susfs
-          patch -p1 --fuzz=3 < susfs/kernel_patches/kernelsu-only.patch || true
-          patch -p1 --fuzz=3 < susfs/kernel_patches/50_add_susfs_in_kernel-4.14.patch || true
-          patch -p1 --fuzz=3 < susfs/kernel_patches/susfs_fix_nameic.patch || true
-          patch -p1 --fuzz=3 < susfs/kernel_patches/fix_stat.c.patch || true
-          patch -p1 --fuzz=3 < susfs/kernel_patches/55_try_umount_for_susfs.patch || true
+          git clone --depth=1 -b main https://github.com/nanix06/Patch_Ksu_SuSFS.git patches
+          patch -p1 --fuzz=3 < patches/Patches/SU_kernel/patch_ksunext.patch || true
+          patch -p1 --fuzz=3 < patches/Patches/SuSFS_Kernel/50_add_susfs_in_kernel-4.14.patch || true
+          patch -p1 --fuzz=3 < patches/Patches/Fix/susfs_fix_nameic.patch || true
+          patch -p1 --fuzz=3 < patches/Patches/Fix/susf_fix_statc.patch || true
+          patch -p1 --fuzz=3 < patches/Patches/SuSFS_Kernel/55_try_umount_for_susfs.patch || true
           sed -i 's/inotify_mark_user_mask(mark)/(mark->mask \& IN_ALL_EVENTS)/g' fs/notify/fdinfo.c
           sed -i '/^orig_flow:$/a\\t\t;' fs/notify/fdinfo.c
           sed -i '0,/^static void susfs_run_sus_path_loop(void) {/s//void susfs_run_sus_path_loop(void) {/' fs/susfs.c
@@ -52,9 +52,13 @@ jobs:
         run: |
           git clone --depth=1 -b legacy https://github.com/KernelSU-Next/KernelSU-Next.git KernelSU
           ln -s ../KernelSU/kernel drivers/kernelsu
-          sed -i 's/get_monotonic_boottime(&ts)/ktime_get_boottime_ts64(\&ts)/' KernelSU/kernel/sulog/event.c
+          # Ce noyau 4.14 n'a pas ktime_get_boottime_ts64() (4.19+) ni
+          # get_monotonic_boottime(); il fournit get_monotonic_boottime64()
+          # qui correspond exactement au struct timespec64 ts de event.c.
+          sed -i 's/get_monotonic_boottime(&ts)/get_monotonic_boottime64(\&ts)/' KernelSU/kernel/sulog/event.c
+          sed -i '/#include <linux\/uaccess.h>/a #include <linux/timekeeping.h>' KernelSU/kernel/sulog/event.c
 
-          bash susfs/kernel_patches/fix_sepolicy_mojito.sh KernelSU
+          bash patches/Patches/Fix/fix_sepolicy_mojito.sh KernelSU
 
           # backslashxx/KernelSU = unity build -> son sepolicy.c n'a AUCUN
           # include. Compilé en standalone ici, il lui manque donc
@@ -83,9 +87,9 @@ jobs:
             | cat - KernelSU/kernel/selinux/sepolicy.c > /tmp/sepolicy.c.net \
             && mv /tmp/sepolicy.c.net KernelSU/kernel/selinux/sepolicy.c
 
-          cp susfs/kernel_patches/KernelSU/susfs_hook_only_official-legacy.patch KernelSU/
+          cp patches/Patches/SuSFS_Ksu/susfs_patch_ksunext.patch KernelSU/
           cd KernelSU
-          patch -p1 < susfs_hook_only_official-legacy.patch || true
+          patch -p1 < susfs_patch_ksunext.patch || true
           cd ..
 
       - name: Configurer le noyau
