@@ -53,20 +53,11 @@ jobs:
         run: |
           git clone --depth=1 -b legacy https://github.com/KernelSU-Next/KernelSU-Next.git KernelSU
           ln -s ../KernelSU/kernel drivers/kernelsu
-          # Ce noyau 4.14 n'a pas ktime_get_boottime_ts64() (4.19+) ni
-          # get_monotonic_boottime(); il fournit get_monotonic_boottime64()
-          # qui correspond exactement au struct timespec64 ts de event.c.
           sed -i 's/get_monotonic_boottime(&ts)/get_monotonic_boottime64(\&ts)/' KernelSU/kernel/sulog/event.c
           sed -i '/#include <linux\/uaccess.h>/a #include <linux/timekeeping.h>' KernelSU/kernel/sulog/event.c
 
           bash patches/Patches/Fix/fix_sepolicy_mojito.sh KernelSU
 
-          # backslashxx/KernelSU = unity build -> son sepolicy.c n'a AUCUN
-          # include. Compilé en standalone ici, il lui manque donc
-          # LINUX_VERSION_CODE/KERNEL_VERSION/bool/uint16_t, etc.
-          # KSU_TYPE_VAL_TO_STRUCT = détection auto par le Makefile
-          # backslashxx (grep de policydb.h) que le Makefile legacy de
-          # KernelSU-Next ne fait PAS -> sinon branche flex_array sur 4.14.
           printf '%s\n' \
             '#define KSU_TYPE_VAL_TO_STRUCT' \
             '#include "ss/avtab.h"' \
