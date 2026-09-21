@@ -117,6 +117,7 @@ jobs:
 
           ./scripts/config --file out/.config \
             --set-str LOCALVERSION "-STRIX❄-SuSFSඞ"
+          ./scripts/config --file out/.config --disable CONFIG_LOCALVERSION_AUTO
 
           make O=out ARCH=arm64 \
             CC=clang \
